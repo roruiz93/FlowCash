@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LangProvider, useLang } from './src/hooks/useLang';
+import { requestNotificationPermissions, scheduleReminderNotification, cancelReminderNotification } from './src/utils/notifications';
 import { useAuth } from './src/hooks/useAuth';
 import { useTransactions, useReminders } from './src/hooks/useFirestore';
 import DashboardScreen from './src/screens/DashboardScreen';
@@ -55,6 +56,24 @@ function AppContent() {
     }
   }, [firestoreError]);
   const { reminders, addReminder, deleteReminder } = useReminders(user?.uid);
+
+  // Pedir permisos de notificación cuando el usuario está logueado
+  useEffect(() => {
+    if (user) requestNotificationPermissions();
+  }, [user]);
+
+  // Programa notificación y guarda el ID con el reminder
+  const handleAddReminder = async (name, due, amount) => {
+    const notificationId = await scheduleReminderNotification(name, due, amount);
+    addReminder(name, due, amount, notificationId);
+  };
+
+  // Cancela la notificación y borra el reminder de Firestore
+  const handleDeleteReminder = async (id) => {
+    const reminder = reminders.find(r => r.id === id);
+    await cancelReminderNotification(reminder?.notificationId);
+    deleteReminder(id);
+  };
 
   const addTransactions = async (txArray) => {
     await Promise.all(txArray.map(tx => addTransaction(
@@ -133,7 +152,7 @@ function AppContent() {
         {tab === 'budget'       && <BudgetScreen transactions={transactions} userId={user.uid} bottomOffset={bottomNavTotal} />}
         {tab === 'savings'      && <SavingsScreen transactions={transactions} userId={user?.uid} bottomOffset={bottomNavTotal} />}
         {tab === 'mercadopago'  && <MercadoPagoScreen onImport={addTransactions} bottomOffset={bottomNavTotal} />}
-        {tab === 'reminders'    && <RemindersScreen reminders={reminders} onDelete={deleteReminder} bottomOffset={bottomNavTotal} />}
+        {tab === 'reminders'    && <RemindersScreen reminders={reminders} onDelete={handleDeleteReminder} bottomOffset={bottomNavTotal} />}
       </View>
 
       {/* FAB */}
@@ -175,7 +194,7 @@ function AppContent() {
       <AddReminderModal
         visible={showReminderModal}
         onClose={() => setShowReminderModal(false)}
-        onAdd={addReminder}
+        onAdd={handleAddReminder}
       />
     </View>
   );

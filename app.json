@@ -4,7 +4,7 @@
     "slug": "flowcash",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo.png",
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash.png",
@@ -12,27 +12,40 @@
       "backgroundColor": "#0a0a0f"
     },
     "assetBundlePatterns": [
-      "*/"
+      "**/*"
     ],
+    "scheme": "com.flowcash.app",
     "ios": {
+      "icon": "./assets/logo.png",
       "supportsTablet": true,
-      "bundleIdentifier": "com.flowcash.app"
+      "bundleIdentifier": "com.flowcash"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#0a0a0f"
-      },
+      "icon": "./assets/logo.png",
+      "googleServicesFile": "./google-services.json",
       "package": "com.flowcash.app",
       "versionCode": 1,
       "permissions": []
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/logo.png"
     },
     "plugins": [
       "expo-sharing",
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/logo.png",
+          "color": "#0a0a0f"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a10948e8-5d14-4f8c-a869-672f1397d35b"
+      }
+    }
   }
 }

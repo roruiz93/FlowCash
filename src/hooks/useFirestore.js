@@ -83,8 +83,11 @@ setReminders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
 return unsub;
 }, [userId]);
 
-const addReminder = async (name, due, amount) => {
-await addDoc(collection(db, 'reminders'), { name, due, amount: amount || 0, userId });
+const addReminder = async (name, due, amount, notificationId) => {
+await addDoc(collection(db, 'reminders'), {
+  name, due, amount: amount || 0, userId,
+  ...(notificationId && { notificationId }),
+});
 };
 
 const deleteReminder = async (id) => await deleteDoc(doc(db, 'reminders', id));
