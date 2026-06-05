@@ -16,8 +16,8 @@ setLoading(false);
 return unsub;
 }, [userId]);
 
-const addTransaction = async (desc, amount, category, type) => {
-await addDoc(collection(db, 'transactions'), { desc, amount, category, type, userId, date: new Date().toISOString() });
+const addTransaction = async (desc, amount, category, type, date) => {
+await addDoc(collection(db, 'transactions'), { desc, amount, category, type, userId, date: date || new Date().toISOString() });
 };
 
 const editTransaction = async (id, desc, amount, category, type) => {

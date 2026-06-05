@@ -10,7 +10,7 @@ import { useLang } from '../hooks/useLang';
 
 const fmt = (n) => '$' + n.toLocaleString('es-AR', { maximumFractionDigits: 0 });
 
-export default function BudgetScreen({ transactions, userId }) {
+export default function BudgetScreen({ transactions, userId, bottomOffset = 80 }) {
 const { t } = useLang();
 const [budgets, setBudgets] = useState(DEFAULT_BUDGETS);
 const [loading, setLoading] = useState(true);
@@ -42,19 +42,17 @@ const saveBudget = async () => {
   if (!editCat) return;
   const clean = editValue.replace(/[^\d]/g, '');
   const val = clean === '' ? 0 : parseInt(clean, 10);
-  const catToSave = editCat;
-  
-  // Cerrar modal primero
-  setEditCat(null);
-  setEditValue('');
-  
-  // Luego guardar en background
+  setSaving(true);
   try {
-    const updated = { ...budgets, [catToSave]: val };
+    const updated = { ...budgets, [editCat]: val };
     setBudgets(updated);
     await setDoc(doc(db, 'budgets', userId), updated);
+    setEditCat(null);
+    setEditValue('');
   } catch (e) {
     console.log('Error guardando presupuesto:', e);
+  } finally {
+    setSaving(false);
   }
 };
 
@@ -96,13 +94,13 @@ return (
   {/* Resumen total */}
   <View style={styles.summaryCard}>
     <View style={styles.summaryRow}>
-      <Text style={styles.summaryLabel}>Total gastado</Text>
+      <Text style={styles.summaryLabel}>{t('totalSpent')}</Text>
       <Text style={[styles.summaryValue, { color: totalSpent > totalBudget ? COLORS.red : COLORS.accent }]}>
         {fmt(totalSpent)}
       </Text>
     </View>
     <View style={styles.summaryRow}>
-      <Text style={styles.summaryLabel}>Presupuesto total</Text>
+      <Text style={styles.summaryLabel}>{t('totalBudget')}</Text>
       <Text style={styles.summaryValue}>{fmt(totalBudget)}</Text>
     </View>
     <View style={styles.barBg}>
@@ -112,7 +110,7 @@ return (
       }]} />
     </View>
     <Text style={[styles.summaryLabel, { textAlign: 'right', marginTop: 4 }]}>
-      {totalPct.toFixed(0)}% usado
+      {totalPct.toFixed(0)}{t('used')}
     </Text>
   </View>
 
@@ -131,7 +129,7 @@ return (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <View style={{ alignItems: 'flex-end' }}>
               {unused ? (
-                <Text style={styles.noLimit}>Sin límite</Text>
+                <Text style={styles.noLimit}>{t('noLimit')}</Text>
               ) : (
                 <Text style={[styles.catAmount, { color: over ? COLORS.red : COLORS.accent }]}>
                   {fmt(spent)} / {fmt(limit)}
@@ -159,7 +157,7 @@ return (
     );
   })}
 
-  <View style={{ height: 80 }} />
+  <View style={{ height: bottomOffset + 20 }} />
 
   {/* Modal editar presupuesto */}
   <Modal visible={!!editCat } transparent animationType="fade">
@@ -171,7 +169,7 @@ return (
         <Text style={styles.modalTitle}>
           {editCat ? `${CAT_EMOJIS[editCat]} ${t('cats')[editCat]}` : ''}
         </Text>
-        <Text style={styles.modalSubtitle}>Límite mensual</Text>
+        <Text style={styles.modalSubtitle}>{t('monthlyLimit')}</Text>
         <TextInput
           style={styles.input}
           value={editValue}
@@ -181,13 +179,13 @@ return (
           placeholderTextColor={COLORS.muted}
           autoFocus
         />
-        <Text style={styles.modalHint}>Poné 0 para sin límite</Text>
+        <Text style={styles.modalHint}>{t('setLimit')}</Text>
         <View style={styles.modalButtons}>
           <TouchableOpacity
             style={[styles.modalBtn, { backgroundColor: COLORS.card2 }]}
             onPress={() => { setEditCat(null); setEditValue(''); }}
           >
-            <Text style={{ color: COLORS.muted, fontWeight: '600' }}>Cancelar</Text>
+            <Text style={{ color: COLORS.muted, fontWeight: '600' }}>{t('cancel')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.modalBtn, { backgroundColor: COLORS.accent }]}
@@ -196,7 +194,7 @@ return (
           >
             {saving
               ? <ActivityIndicator size="small" color="#000" />
-              : <Text style={{ color: '#000', fontWeight: '700' }}>Guardar</Text>
+              : <Text style={{ color: '#000', fontWeight: '700' }}>{t('save')}</Text>
             }
           </TouchableOpacity>
         </View>

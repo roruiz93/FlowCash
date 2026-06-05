@@ -5,11 +5,12 @@ import * as Google from 'expo-auth-session/providers/google';
 import { GoogleAuthProvider, signInWithCredential, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { COLORS } from '../constants';
-import { GOOGLE_WEB_CLIENT_ID } from '@env';
-
+import { useLang } from '../hooks/useLang';
+import { GOOGLE_WEB_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID } from '@env';
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen({ onLogin, onRegister }) {
+const { t } = useLang();
 const [mode, setMode] = useState('login');
 const [email, setEmail] = useState('');
 const [password, setPassword] = useState('');
@@ -18,41 +19,42 @@ const [error, setError] = useState('');
 const [successMsg, setSuccessMsg] = useState('');
 
 const [request, response, promptAsync] = Google.useAuthRequest({
-webClientId: GOOGLE_WEB_CLIENT_ID,
+  webClientId: GOOGLE_WEB_CLIENT_ID,
+  androidClientId: GOOGLE_ANDROID_CLIENT_ID,
 });
 
 React.useEffect(() => {
 if (response?.type === 'success') {
 const { id_token } = response.params;
 const credential = GoogleAuthProvider.credential(id_token);
-signInWithCredential(auth, credential).catch(() => setError('Error al iniciar con Google'));
+signInWithCredential(auth, credential).catch(() => setError(t('authError')));
 }
 }, [response]);
 
 const handleSubmit = async () => {
-if (!email.trim() || !password.trim()) { setError('Completá todos los campos'); return; }
+if (!email.trim() || !password.trim()) { setError(t('emailRequired')); return; }
 setLoading(true); setError(''); setSuccessMsg('');
 try {
 if (mode === 'login') await onLogin(email.trim(), password);
 else await onRegister(email.trim(), password);
 } catch (e) {
-if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') setError('Email o contraseña incorrectos');
-else if (e.code === 'auth/email-already-in-use') setError('El email ya está registrado');
-else if (e.code === 'auth/weak-password') setError('La contraseña debe tener al menos 6 caracteres');
-else setError('Ocurrió un error, intentá de nuevo');
+if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') setError(t('invalidCredential'));
+else if (e.code === 'auth/email-already-in-use') setError(t('emailInUse'));
+else if (e.code === 'auth/weak-password') setError(t('weakPassword'));
+else setError(t('authError'));
 }
 setLoading(false);
 };
 
 const handleForgotPassword = async () => {
-if (!email.trim()) { setError('Primero ingresá tu email arriba'); return; }
+if (!email.trim()) { setError(t('noAccountEmail')); return; }
 setLoading(true); setError(''); setSuccessMsg('');
 try {
 await sendPasswordResetEmail(auth, email.trim());
-setSuccessMsg('✅ Te enviamos un email para restablecer tu contraseña');
+setSuccessMsg(t('resetEmailSent'));
 } catch (e) {
-if (e.code === 'auth/user-not-found') setError('No existe una cuenta con ese email');
-else setError('Ocurrió un error, intentá de nuevo');
+if (e.code === 'auth/user-not-found') setError(t('noAccountFound'));
+else setError(t('authError'));
 }
 setLoading(false);
 };
@@ -62,12 +64,12 @@ return (
 <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 <View style={styles.logoWrap}>
 <Text style={styles.logo}>Flow<Text style={{ color: COLORS.accent }}>Cash</Text></Text>
-<Text style={styles.logoSub}>Tus finanzas, bajo control 💸</Text>
+<Text style={styles.logoSub}>{t('logoSub')}</Text>
 </View>
 <View style={styles.card}>
 <TouchableOpacity style={styles.googleBtn} onPress={() => promptAsync()} disabled={!request}>
 <Text style={styles.googleIcon}>G</Text>
-<Text style={styles.googleBtnText}>Continuar con Google</Text>
+<Text style={styles.googleBtnText}>{t('googleBtn')}</Text>
 </TouchableOpacity>
 <View style={styles.divider}>
 <View style={styles.dividerLine} />
@@ -76,30 +78,28 @@ return (
 </View>
 <View style={styles.modeToggle}>
 <TouchableOpacity style={[styles.modeBtn, mode === 'login' && styles.modeBtnActive]} onPress={() => { setMode('login'); setError(''); setSuccessMsg(''); }}>
-<Text style={[styles.modeBtnText, mode === 'login' && styles.modeBtnTextActive]}>Iniciar sesión</Text>
+<Text style={[styles.modeBtnText, mode === 'login' && styles.modeBtnTextActive]}>{t('loginMode')}</Text>
 </TouchableOpacity>
 <TouchableOpacity style={[styles.modeBtn, mode === 'register' && styles.modeBtnActive]} onPress={() => { setMode('register'); setError(''); setSuccessMsg(''); }}>
-<Text style={[styles.modeBtnText, mode === 'register' && styles.modeBtnTextActive]}>Registrarse</Text>
+<Text style={[styles.modeBtnText, mode === 'register' && styles.modeBtnTextActive]}>{t('registerMode')}</Text>
 </TouchableOpacity>
 </View>
 
-
-      <Text style={styles.label}>EMAIL</Text>
+      <Text style={styles.label}>{t('emailLabel')}</Text>
       <TextInput
         style={styles.input} value={email} onChangeText={setEmail}
         placeholder="tucorreo@email.com" placeholderTextColor={COLORS.muted}
         keyboardType="email-address" autoCapitalize="none" />
 
-      <Text style={styles.label}>CONTRASEÑA</Text>
+      <Text style={styles.label}>{t('passwordLabel')}</Text>
       <TextInput
         style={styles.input} value={password} onChangeText={setPassword}
-        placeholder="Mínimo 6 caracteres" placeholderTextColor={COLORS.muted}
+        placeholder={t('passwordPlaceholder')} placeholderTextColor={COLORS.muted}
         secureTextEntry />
 
-      {/* Olvidé mi contraseña - solo en modo login */}
       {mode === 'login' && (
         <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotBtn}>
-          <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
+          <Text style={styles.forgotText}>{t('forgotPassword')}</Text>
         </TouchableOpacity>
       )}
 
@@ -108,14 +108,12 @@ return (
 
       <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={loading}>
         {loading ? <ActivityIndicator color="#000" /> : (
-          <Text style={styles.submitBtnText}>{mode === 'login' ? 'Entrar' : 'Crear cuenta'}</Text>
+          <Text style={styles.submitBtnText}>{mode === 'login' ? t('loginBtn') : t('registerBtn')}</Text>
         )}
       </TouchableOpacity>
     </View>
   </ScrollView>
 </KeyboardAvoidingView>
-
-
 );
 }
 

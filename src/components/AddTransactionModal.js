@@ -39,7 +39,7 @@ return (
 <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 <TouchableOpacity style={styles.backdrop} onPress={onClose} />
 <View style={styles.modal}>
-<Text style={styles.title}>{isEditing ? '✏️ Editar movimiento' : t('addTx')}</Text>
+<Text style={styles.title}>{isEditing ? t('editTx') : t('addTx')}</Text>
 <View style={styles.typeRow}>
 <TouchableOpacity
 style={[styles.typeBtn, type === 'income' && styles.typeBtnIncomeActive]}
@@ -55,7 +55,7 @@ onPress={() => setType('expense')}>
 <Text style={styles.label}>{t('desc')}</Text>
 <TextInput
 style={styles.input} value={desc} onChangeText={setDesc}
-placeholder="Ej: Sueldo, Supermercado..." placeholderTextColor={COLORS.muted} />
+placeholder={t('descPlaceholder')} placeholderTextColor={COLORS.muted} />
 <Text style={styles.label}>{t('amount')}</Text>
 <TextInput
 style={styles.input} value={amount} onChangeText={setAmount}
@@ -72,7 +72,7 @@ onPress={() => setCategory(cat)}>
 ))}
 </ScrollView>
 <TouchableOpacity style={styles.addBtn} onPress={handleAdd}>
-<Text style={styles.addBtnText}>{isEditing ? 'Guardar cambios' : t('add')}</Text>
+<Text style={styles.addBtnText}>{isEditing ? t('saveChanges') : t('add')}</Text>
 </TouchableOpacity>
 </View>
 </KeyboardAvoidingView>

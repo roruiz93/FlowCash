@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { COLORS, CAT_COLORS, CATEGORIES } from '../constants';
 import { useLang } from '../hooks/useLang';
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
 const fmt = (n) => '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
 
-export default function ChartsScreen({ transactions }) {
+export default function ChartsScreen({ transactions, bottomOffset = 80 }) {
 const { t } = useLang();
+const { width: SCREEN_WIDTH } = useWindowDimensions();
 const [activeChart, setActiveChart] = useState('line');
 const now = new Date();
 
@@ -85,7 +84,6 @@ onPress={() => setActiveChart('pie')}>
 </TouchableOpacity>
 </View>
 
-```
   {!hasData ? (
     <View style={styles.empty}>
       <Text style={styles.emptyIcon}>📊</Text>
@@ -187,7 +185,7 @@ onPress={() => setActiveChart('pie')}>
       )}
     </>
   )}
-  <View style={{ height: 80 }} />
+  <View style={{ height: bottomOffset + 20 }} />
 </ScrollView>
 
 

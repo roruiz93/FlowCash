@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
+import { GOOGLE_WEB_CLIENT_ID } from '@env';
 
 WebBrowser.maybeCompleteAuthSession();
 
-// ─── Configuración OAuth Gmail ───────────────────────────────────────────────
-// Reemplazá con tu Client ID de Google Cloud Console (mismo proyecto Firebase)
-const GOOGLE_CLIENT_ID = 'TU_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = GOOGLE_WEB_CLIENT_ID;
 
 const GMAIL_SCOPES = [
 'openid',
@@ -44,7 +43,7 @@ const MP_PATTERNS = [
 // Convierte “1.500,50” o “1500.50” a número
 const parseAmount = (str) => {
 if (!str) return 0;
-const cleaned = str.replace(/./g, '').replace(',', '.');
+const cleaned = str.replace(/\./g, '').replace(',', '.');
 return parseFloat(cleaned) || 0;
 };
 
@@ -90,7 +89,7 @@ const [pendingTx, setPendingTx] = useState([]);   // Para confirmar antes de imp
 const [lastSync, setLastSync] = useState(null);
 const [connected, setConnected] = useState(false);
 
-const redirectUri = AuthSession.makeRedirectUri({ scheme: 'com.flowcash.app',useProxy: true });
+const redirectUri = AuthSession.makeRedirectUri({ scheme: 'com.flowcash.app' });
 
 const [request, response, promptAsync] = AuthSession.useAuthRequest(
 {
@@ -240,7 +239,7 @@ const afterUnix = Math.floor(after.getTime() / 1000);
           ...result,
           date,
           source: 'mercadopago',
-          category: result.type === 'expense' ? 'otros' : 'otros_ingresos',
+          category: result.type === 'expense' ? 'Other' : 'Salary',
           rawSubject: subject,
         });
       }

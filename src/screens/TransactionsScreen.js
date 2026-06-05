@@ -6,7 +6,7 @@ import AddTransactionModal from '../components/AddTransactionModal';
 
 const fmt = (n) => '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
 
-export default function TransactionsScreen({ transactions, onDelete, onEdit }) {
+export default function TransactionsScreen({ transactions, onDelete, onEdit, bottomOffset = 80 }) {
 const { t } = useLang();
 const [editingTx, setEditingTx] = useState(null);
 
@@ -60,10 +60,9 @@ return (
 );
 })
 )}
-<View style={{ height: 80 }} />
+<View style={{ height: bottomOffset + 20 }} />
 </ScrollView>
 
-```
   {editingTx && (
     <AddTransactionModal
       visible={!!editingTx}

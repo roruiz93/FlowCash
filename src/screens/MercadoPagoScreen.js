@@ -3,31 +3,21 @@ import {
 View, Text, ScrollView, StyleSheet, TouchableOpacity,
 ActivityIndicator, Alert, Switch
 } from 'react-native';
-import { COLORS } from '../constants';
+import { COLORS, CATEGORIES, CAT_EMOJIS } from '../constants';
 import { useLang } from '../hooks/useLang';
 import { useMercadoPagoGmail } from '../hooks/UseMercadoPagoGmail';
 
 const fmt = (n) => '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
 
-const CATEGORY_OPTIONS_EXPENSE = [
-{ key: 'comida', label: '🍔 Comida' },
-{ key: 'transporte', label: '🚗 Transporte' },
-{ key: 'servicios', label: '💡 Servicios' },
-{ key: 'entretenimiento', label: '🎬 Entrete.' },
-{ key: 'salud', label: '💊 Salud' },
-{ key: 'compras', label: '🛍 Compras' },
-{ key: 'otros', label: '📦 Otros' },
-];
-
-const CATEGORY_OPTIONS_INCOME = [
-{ key: 'sueldo', label: '💼 Sueldo' },
-{ key: 'freelance', label: '💻 Freelance' },
-{ key: 'transferencia', label: '💸 Transfer.' },
-{ key: 'otros_ingresos', label: '📥 Otros' },
-];
-
-export default function MercadoPagoScreen({ onImport }) {
+export default function MercadoPagoScreen({ onImport, bottomOffset = 80 }) {
 const { t } = useLang();
+const CATEGORY_OPTIONS_EXPENSE = CATEGORIES
+  .filter(c => c !== 'Salary')
+  .map(cat => ({ key: cat, label: `${CAT_EMOJIS[cat]} ${t('cats')[cat]}` }));
+const CATEGORY_OPTIONS_INCOME = [
+  { key: 'Salary', label: `${CAT_EMOJIS['Salary']} ${t('cats')['Salary']}` },
+  { key: 'Other',  label: `${CAT_EMOJIS['Other']} ${t('cats')['Other']}` },
+];
 const {
 connected, loading, syncing, error,
 pendingTx, lastSync, request,
@@ -253,7 +243,7 @@ return (
     <Text style={styles.privacyText}>{t('mpPrivacyText')}</Text>
   </View>
 
-  <View style={{ height: 80 }} />
+  <View style={{ height: bottomOffset + 20 }} />
 </ScrollView>
 
 
