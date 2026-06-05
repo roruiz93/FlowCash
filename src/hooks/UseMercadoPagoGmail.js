@@ -148,6 +148,7 @@ setAccessToken(tokenData.access_token);
 setConnected(true);
 await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify({
 accessToken: tokenData.access_token,
+refreshToken: tokenData.refresh_token || null,
 lastSync: null,
 }));
 } else {
@@ -157,6 +158,50 @@ setError('No se pudo obtener el token de acceso');
 setError('Error al autenticar');
 }
 setLoading(false);
+};
+
+// Renueva el access token usando el refresh token guardado
+const refreshAccessToken = async () => {
+try {
+  const saved = await SecureStore.getItemAsync(STORAGE_KEY);
+  if (!saved) return null;
+  const { refreshToken } = JSON.parse(saved);
+  if (!refreshToken) return null;
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      refresh_token: refreshToken,
+      client_id: GOOGLE_CLIENT_ID,
+      grant_type: 'refresh_token',
+    }).toString(),
+  });
+  const tokenData = await tokenRes.json();
+  if (tokenData.access_token) {
+    setAccessToken(tokenData.access_token);
+    await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify({
+      accessToken: tokenData.access_token,
+      refreshToken,
+      lastSync: null,
+    }));
+    return tokenData.access_token;
+  }
+  return null;
+} catch (e) {
+  return null;
+}
+};
+
+// Fetch con reintentos automáticos si el token expiró (401)
+const fetchWithAuth = async (url, token) => {
+let res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+if (res.status === 401) {
+  const newToken = await refreshAccessToken();
+  if (!newToken) return { res, token };
+  res = await fetch(url, { headers: { Authorization: 'Bearer ' + newToken } });
+  return { res, token: newToken };
+}
+return { res, token };
 };
 
 // Conectar Gmail
@@ -193,15 +238,15 @@ const afterUnix = Math.floor(after.getTime() / 1000);
 
 
   // Buscar emails de MP
-  const query = encodeURIComponent(
+  const gmailQuery = encodeURIComponent(
     'from:no-reply@mail.mercadopago.com after:' + afterUnix
   );
-  const listRes = await fetch(
-    'https://gmail.googleapis.com/gmail/v1/users/me/messages?q=' + query + '&maxResults=50',
-    { headers: { Authorization: 'Bearer ' + accessToken } }
+  const { res: listRes, token: currentToken } = await fetchWithAuth(
+    'https://gmail.googleapis.com/gmail/v1/users/me/messages?q=' + gmailQuery + '&maxResults=50',
+    accessToken
   );
 
-  if (listRes.status === 401) {
+  if (!listRes.ok) {
     setError('Sesión expirada. Reconectá tu Gmail.');
     setConnected(false);
     await SecureStore.deleteItemAsync(STORAGE_KEY);
@@ -222,9 +267,9 @@ const afterUnix = Math.floor(after.getTime() / 1000);
   const parsed = [];
   for (const msg of messages.slice(0, 30)) {
     try {
-      const msgRes = await fetch(
+      const { res: msgRes } = await fetchWithAuth(
         'https://gmail.googleapis.com/gmail/v1/users/me/messages/' + msg.id + '?format=metadata&metadataHeaders=Subject&metadataHeaders=Date',
-        { headers: { Authorization: 'Bearer ' + accessToken } }
+        currentToken
       );
       const msgData = await msgRes.json();
       const headers = msgData.payload?.headers || [];

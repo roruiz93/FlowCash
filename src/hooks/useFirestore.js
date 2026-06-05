@@ -1,20 +1,47 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy, where } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy, where, limit, startAfter, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
+
+const PAGE_SIZE = 50;
 
 export const useTransactions = (userId) => {
 const [transactions, setTransactions] = useState([]);
 const [loading, setLoading] = useState(true);
+const [lastDoc, setLastDoc] = useState(null);
+const [hasMore, setHasMore] = useState(false);
 
 useEffect(() => {
 if (!userId) return;
-const q = query(collection(db, 'transactions'), where('userId', '==', userId), orderBy('date', 'desc'));
+const q = query(
+  collection(db, 'transactions'),
+  where('userId', '==', userId),
+  orderBy('date', 'desc'),
+  limit(PAGE_SIZE)
+);
 const unsub = onSnapshot(q, (snap) => {
-setTransactions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-setLoading(false);
+  setTransactions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  setLastDoc(snap.docs[snap.docs.length - 1] || null);
+  setHasMore(snap.docs.length === PAGE_SIZE);
+  setLoading(false);
 });
 return unsub;
 }, [userId]);
+
+const loadMore = async () => {
+if (!lastDoc || !hasMore) return;
+const q = query(
+  collection(db, 'transactions'),
+  where('userId', '==', userId),
+  orderBy('date', 'desc'),
+  startAfter(lastDoc),
+  limit(PAGE_SIZE)
+);
+const snap = await getDocs(q);
+const more = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+setTransactions(prev => [...prev, ...more]);
+setLastDoc(snap.docs[snap.docs.length - 1] || null);
+setHasMore(snap.docs.length === PAGE_SIZE);
+};
 
 const addTransaction = async (desc, amount, category, type, date) => {
 await addDoc(collection(db, 'transactions'), { desc, amount, category, type, userId, date: date || new Date().toISOString() });
@@ -26,7 +53,7 @@ await updateDoc(doc(db, 'transactions', id), { desc, amount, category, type });
 
 const deleteTransaction = async (id) => await deleteDoc(doc(db, 'transactions', id));
 
-return { transactions, loading, addTransaction, editTransaction, deleteTransaction };
+return { transactions, loading, hasMore, loadMore, addTransaction, editTransaction, deleteTransaction };
 };
 
 export const useReminders = (userId) => {

@@ -46,7 +46,7 @@ function AppContent() {
   const scale = Math.min(width / 390, 1.2);
   const isSmall = height < 700;
 
-  const { transactions, addTransaction, editTransaction, deleteTransaction } = useTransactions(user?.uid);
+  const { transactions, addTransaction, editTransaction, deleteTransaction, hasMore, loadMore } = useTransactions(user?.uid);
   const { reminders, addReminder, deleteReminder } = useReminders(user?.uid);
 
   const addTransactions = async (txArray) => {
@@ -121,7 +121,7 @@ function AppContent() {
       {/* Contenido principal */}
       <View style={styles.content}>
         {tab === 'dashboard'    && <DashboardScreen transactions={transactions} bottomOffset={bottomNavTotal} />}
-        {tab === 'transactions' && <TransactionsScreen transactions={transactions} onDelete={deleteTransaction} onEdit={editTransaction} bottomOffset={bottomNavTotal} />}
+        {tab === 'transactions' && <TransactionsScreen transactions={transactions} onDelete={deleteTransaction} onEdit={editTransaction} hasMore={hasMore} onLoadMore={loadMore} bottomOffset={bottomNavTotal} />}
         {tab === 'charts'       && <ChartsScreen transactions={transactions} bottomOffset={bottomNavTotal} />}
         {tab === 'budget'       && <BudgetScreen transactions={transactions} userId={user.uid} bottomOffset={bottomNavTotal} />}
         {tab === 'savings'      && <SavingsScreen transactions={transactions} userId={user?.uid} bottomOffset={bottomNavTotal} />}

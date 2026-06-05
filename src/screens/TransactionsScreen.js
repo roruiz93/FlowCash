@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { COLORS, CAT_EMOJIS, CAT_COLORS } from '../constants';
 import { useLang } from '../hooks/useLang';
 import AddTransactionModal from '../components/AddTransactionModal';
 
 const fmt = (n) => '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
 
-export default function TransactionsScreen({ transactions, onDelete, onEdit, bottomOffset = 80 }) {
+export default function TransactionsScreen({ transactions, onDelete, onEdit, hasMore, onLoadMore, bottomOffset = 80 }) {
 const { t } = useLang();
 const [editingTx, setEditingTx] = useState(null);
+const [loadingMore, setLoadingMore] = useState(false);
+
+const handleLoadMore = async () => {
+  setLoadingMore(true);
+  await onLoadMore?.();
+  setLoadingMore(false);
+};
 
 const confirmDelete = (id) => {
 Alert.alert(
@@ -60,7 +67,15 @@ return (
 );
 })
 )}
-<View style={{ height: bottomOffset + 20 }} />
+  {hasMore && (
+    <TouchableOpacity style={styles.loadMoreBtn} onPress={handleLoadMore} disabled={loadingMore}>
+      {loadingMore
+        ? <ActivityIndicator color={COLORS.accent} size="small" />
+        : <Text style={styles.loadMoreText}>↓ Cargar más</Text>
+      }
+    </TouchableOpacity>
+  )}
+  <View style={{ height: bottomOffset + 20 }} />
 </ScrollView>
 
   {editingTx && (
@@ -101,4 +116,11 @@ deleteBtn: { padding: 4 },
 empty: { alignItems: 'center', paddingVertical: 40 },
 emptyIcon: { fontSize: 48, marginBottom: 12 },
 emptyText: { color: COLORS.muted, textAlign: 'center', lineHeight: 22 },
+loadMoreBtn: {
+  alignItems: 'center', justifyContent: 'center',
+  paddingVertical: 14, marginBottom: 10,
+  backgroundColor: COLORS.card, borderRadius: 14,
+  borderWidth: 1, borderColor: COLORS.border,
+},
+loadMoreText: { fontSize: 14, fontWeight: '600', color: COLORS.accent },
 });
