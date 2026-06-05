@@ -3,7 +3,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndi
 import { COLORS, CAT_EMOJIS, CAT_COLORS } from '../constants';
 import { useLang } from '../hooks/useLang';
 import AddTransactionModal from '../components/AddTransactionModal';
-import { exportTransactionsToCSV } from '../utils/exportData';
+import { exportTransactionsToXLS } from '../utils/exportData';
 
 const fmt = (n) => '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
 
@@ -19,7 +19,7 @@ export default function TransactionsScreen({ transactions, onDelete, onEdit, has
       return;
     }
     try {
-      await exportTransactionsToCSV(transactions, t('cats'));
+      await exportTransactionsToXLS(transactions, t('cats'));
     } catch (e) {
       Alert.alert(t('error'), t('exportError'));
     }
