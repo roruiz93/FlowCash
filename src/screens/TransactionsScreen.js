@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndi
 import { COLORS, CAT_EMOJIS, CAT_COLORS } from '../constants';
 import { useLang } from '../hooks/useLang';
 import AddTransactionModal from '../components/AddTransactionModal';
+import { exportTransactionsToCSV } from '../utils/exportData';
 
 const fmt = (n) => '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
 
@@ -11,6 +12,18 @@ export default function TransactionsScreen({ transactions, onDelete, onEdit, has
   const [editingTx, setEditingTx] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState('');
+
+  const handleExport = async () => {
+    if (!transactions.length) {
+      Alert.alert(t('error'), t('exportEmpty'));
+      return;
+    }
+    try {
+      await exportTransactionsToCSV(transactions, t('cats'));
+    } catch (e) {
+      Alert.alert(t('error'), t('exportError'));
+    }
+  };
 
   const filtered = useMemo(() => {
     if (!search.trim()) return transactions;
@@ -77,7 +90,12 @@ export default function TransactionsScreen({ transactions, onDelete, onEdit, has
         contentContainerStyle={styles.container}
         ListHeaderComponent={
           <View>
-            <Text style={styles.sectionTitle}>{t('transactions')}</Text>
+            <View style={styles.headerRow}>
+              <Text style={styles.sectionTitle}>{t('transactions')}</Text>
+              <TouchableOpacity style={styles.exportBtn} onPress={handleExport}>
+                <Text style={styles.exportBtnText}>📤 {t('exportBtn')}</Text>
+              </TouchableOpacity>
+            </View>
             <View style={styles.searchBar}>
               <Text style={styles.searchIcon}>🔍</Text>
               <TextInput
@@ -133,7 +151,15 @@ export default function TransactionsScreen({ transactions, onDelete, onEdit, has
 
 const styles = StyleSheet.create({
   container: { padding: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.text, marginBottom: 12 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.text },
+  exportBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.card, borderRadius: 10,
+    paddingHorizontal: 10, paddingVertical: 6,
+    borderWidth: 1, borderColor: COLORS.border,
+  },
+  exportBtnText: { fontSize: 12, fontWeight: '600', color: COLORS.accent },
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: COLORS.card, borderRadius: 14,

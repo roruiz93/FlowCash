@@ -150,6 +150,9 @@ noResults: 'No results found',
 loadMore: 'Load more',
 error: 'Error',
 firestoreError: 'Could not complete the operation. Check your connection.',
+exportBtn: 'Export CSV',
+exportEmpty: 'No transactions to export',
+exportError: 'Could not export. Please try again.',
 },
 es: {
 // Nav
@@ -279,5 +282,8 @@ noResults: 'Sin resultados',
 loadMore: 'Cargar más',
 error: 'Error',
 firestoreError: 'No se pudo completar la operación. Verificá tu conexión.',
+exportBtn: 'Exportar CSV',
+exportEmpty: 'Sin movimientos para exportar',
+exportError: 'No se pudo exportar. Intentá de nuevo.',
 },
 };
