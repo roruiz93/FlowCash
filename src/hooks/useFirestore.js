@@ -9,6 +9,7 @@ const [transactions, setTransactions] = useState([]);
 const [loading, setLoading] = useState(true);
 const [lastDoc, setLastDoc] = useState(null);
 const [hasMore, setHasMore] = useState(false);
+const [firestoreError, setFirestoreError] = useState(null);
 
 useEffect(() => {
 if (!userId) return;
@@ -44,16 +45,30 @@ setHasMore(snap.docs.length === PAGE_SIZE);
 };
 
 const addTransaction = async (desc, amount, category, type, date) => {
-await addDoc(collection(db, 'transactions'), { desc, amount, category, type, userId, date: date || new Date().toISOString() });
+try {
+  await addDoc(collection(db, 'transactions'), { desc, amount, category, type, userId, date: date || new Date().toISOString() });
+} catch (e) {
+  setFirestoreError('add');
+}
 };
 
 const editTransaction = async (id, desc, amount, category, type) => {
-await updateDoc(doc(db, 'transactions', id), { desc, amount, category, type });
+try {
+  await updateDoc(doc(db, 'transactions', id), { desc, amount, category, type });
+} catch (e) {
+  setFirestoreError('edit');
+}
 };
 
-const deleteTransaction = async (id) => await deleteDoc(doc(db, 'transactions', id));
+const deleteTransaction = async (id) => {
+try {
+  await deleteDoc(doc(db, 'transactions', id));
+} catch (e) {
+  setFirestoreError('delete');
+}
+};
 
-return { transactions, loading, hasMore, loadMore, addTransaction, editTransaction, deleteTransaction };
+return { transactions, loading, hasMore, loadMore, addTransaction, editTransaction, deleteTransaction, firestoreError, clearFirestoreError: () => setFirestoreError(null) };
 };
 
 export const useReminders = (userId) => {

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, StatusBar, ActivityIndicator, useWindowDimensions,
+  StyleSheet, StatusBar, ActivityIndicator, useWindowDimensions, Alert,
 } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LangProvider, useLang } from './src/hooks/useLang';
@@ -46,7 +46,14 @@ function AppContent() {
   const scale = Math.min(width / 390, 1.2);
   const isSmall = height < 700;
 
-  const { transactions, addTransaction, editTransaction, deleteTransaction, hasMore, loadMore } = useTransactions(user?.uid);
+  const { transactions, addTransaction, editTransaction, deleteTransaction, hasMore, loadMore, firestoreError, clearFirestoreError } = useTransactions(user?.uid);
+
+  useEffect(() => {
+    if (firestoreError) {
+      Alert.alert(t('error'), t('firestoreError'));
+      clearFirestoreError();
+    }
+  }, [firestoreError]);
   const { reminders, addReminder, deleteReminder } = useReminders(user?.uid);
 
   const addTransactions = async (txArray) => {
