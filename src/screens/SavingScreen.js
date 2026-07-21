@@ -18,7 +18,7 @@ uala: { tna: 95, label: 'Ualá', icon: '💜', color: '#7c5cff', desc: 'Cuenta r
 fci: { tna: 105, label: 'FCI Money Market', icon: '📈', color: '#00e5a0', desc: 'Fondos comunes de inversión' },
 };
 
-export default function SavingsScreen({ transactions, userId }) {
+export default function SavingsScreen({ transactions, userId, bottomOffset = 80 }) {
 const { t } = useLang();
 const [goal, setGoal] = useState(0);
 const [goalInput, setGoalInput] = useState('');
@@ -445,7 +445,7 @@ return (
       </View>
     )}
 
-    <View style={{ height: 80 }} />
+    <View style={{ height: bottomOffset + 20 }} />
   </ScrollView>
 
   <Modal visible={showGoalModal} transparent animationType="slide" onRequestClose={() => setShowGoalModal(false)}>

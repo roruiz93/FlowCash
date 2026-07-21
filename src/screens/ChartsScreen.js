@@ -3,12 +3,15 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, useWindowDimensio
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { COLORS, CAT_COLORS, CATEGORIES } from '../constants';
 import { useLang } from '../hooks/useLang';
+import PremiumGate from '../components/PremiumGate';
+import { usePremiumStatus } from '../hooks/usePremium';
 const fmt = (n) => '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
 
 export default function ChartsScreen({ transactions, bottomOffset = 80 }) {
 const { t } = useLang();
+const { isPremium } = usePremiumStatus();
 const { width: SCREEN_WIDTH } = useWindowDimensions();
-const [activeChart, setActiveChart] = useState('line');
+const [activeChart, setActiveChart] = useState('bar');
 const now = new Date();
 
 const months = [];
@@ -68,19 +71,23 @@ return (
 <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 <View style={styles.toggle}>
 <TouchableOpacity
-style={[styles.toggleBtn, activeChart === 'line' && styles.toggleBtnActive]}
-onPress={() => setActiveChart('line')}>
-<Text style={[styles.toggleText, activeChart === 'line' && styles.toggleTextActive]}>{t('evolution')}</Text>
-</TouchableOpacity>
-<TouchableOpacity
 style={[styles.toggleBtn, activeChart === 'bar' && styles.toggleBtnActive]}
 onPress={() => setActiveChart('bar')}>
 <Text style={[styles.toggleText, activeChart === 'bar' && styles.toggleTextActive]}>{t('compare')}</Text>
 </TouchableOpacity>
 <TouchableOpacity
+style={[styles.toggleBtn, activeChart === 'line' && styles.toggleBtnActive]}
+onPress={() => setActiveChart('line')}>
+<Text style={[styles.toggleText, activeChart === 'line' && styles.toggleTextActive]}>
+{!isPremium && '🔒 '}{t('evolution')}
+</Text>
+</TouchableOpacity>
+<TouchableOpacity
 style={[styles.toggleBtn, activeChart === 'pie' && styles.toggleBtnActive]}
 onPress={() => setActiveChart('pie')}>
-<Text style={[styles.toggleText, activeChart === 'pie' && styles.toggleTextActive]}>{t('categories')}</Text>
+<Text style={[styles.toggleText, activeChart === 'pie' && styles.toggleTextActive]}>
+{!isPremium && '🔒 '}{t('categories')}
+</Text>
 </TouchableOpacity>
 </View>
 
@@ -92,6 +99,7 @@ onPress={() => setActiveChart('pie')}>
   ) : (
     <>
       {activeChart === 'line' && (
+        <PremiumGate feature="charts.advanced" respectLegacy={false}>
         <View style={styles.chartCard}>
           <Text style={styles.chartTitle}>{t('lineChartTitle')}</Text>
           <LineChart
@@ -120,6 +128,7 @@ onPress={() => setActiveChart('pie')}>
             </View>
           </View>
         </View>
+        </PremiumGate>
       )}
 
       {activeChart === 'bar' && (
@@ -149,6 +158,7 @@ onPress={() => setActiveChart('pie')}>
       )}
 
       {activeChart === 'pie' && (
+        <PremiumGate feature="charts.advanced" respectLegacy={false}>
         <View style={styles.chartCard}>
           <Text style={styles.chartTitle}>{t('pieChartTitle')} — {t('months')[now.getMonth()]}</Text>
           {pieData.length === 0 ? (
@@ -182,6 +192,7 @@ onPress={() => setActiveChart('pie')}>
             </>
           )}
         </View>
+        </PremiumGate>
       )}
     </>
   )}

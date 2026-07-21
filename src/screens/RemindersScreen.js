@@ -5,7 +5,7 @@ import { useLang } from '../hooks/useLang';
 
 const fmt = (n) => '$' + n.toLocaleString('es-AR', { maximumFractionDigits: 0 });
 
-export default function RemindersScreen({ reminders, onDelete }) {
+export default function RemindersScreen({ reminders, onDelete, bottomOffset = 80 }) {
   const { t } = useLang();
   const now = new Date();
 
@@ -49,7 +49,7 @@ export default function RemindersScreen({ reminders, onDelete }) {
           );
         })
       )}
-      <View style={{ height: 80 }} />
+      <View style={{ height: bottomOffset + 20 }} />
     </ScrollView>
   );
 }

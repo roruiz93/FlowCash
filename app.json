@@ -14,7 +14,7 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "scheme": "com.flowcash.app",
+    "scheme": "com.rosariomaruiz.cashflow",
     "ios": {
       "icon": "./assets/logo.png",
       "supportsTablet": true,
@@ -23,7 +23,7 @@
     "android": {
       "icon": "./assets/logo.png",
       "googleServicesFile": "./google-services.json",
-      "package": "com.flowcash.app",
+      "package": "com.rosariomaruiz.cashflow",
       "versionCode": 1,
       "permissions": []
     },

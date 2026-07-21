@@ -4,11 +4,15 @@ import { COLORS, CAT_EMOJIS, CAT_COLORS } from '../constants';
 import { useLang } from '../hooks/useLang';
 import AddTransactionModal from '../components/AddTransactionModal';
 import { exportTransactionsToXLS } from '../utils/exportData';
+import { usePremiumStatus } from '../hooks/usePremium';
+import { useInterstitialAd } from '../hooks/useInterstitialAd';
 
 const fmt = (n) => '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
 
 export default function TransactionsScreen({ transactions, onDelete, onEdit, hasMore, onLoadMore, bottomOffset = 80 }) {
   const { t } = useLang();
+  const { isPremium } = usePremiumStatus();
+  const { showAd } = useInterstitialAd({ enabled: !isPremium, mandatory: true });
   const [editingTx, setEditingTx] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState('');
@@ -18,6 +22,7 @@ export default function TransactionsScreen({ transactions, onDelete, onEdit, has
       Alert.alert(t('error'), t('exportEmpty'));
       return;
     }
+    if (!isPremium) await showAd(); // si el anuncio no cargó, showAd resuelve false y el export sigue igual
     try {
       await exportTransactionsToXLS(transactions, t('cats'));
     } catch (e) {

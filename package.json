@@ -6,13 +6,21 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "lint": "expo lint",
+    "test": "jest",
+    "eas-build-post-install": "node ./node_modules/expo-applovin-ads/scripts/eas-build-post-install-script.js"
+  },
+  "jest": {
+    "preset": "jest-expo"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~55.0.18",
+    "expo-applovin-ads": "^0.2.2",
     "expo-auth-session": "~55.0.15",
     "expo-crypto": "~55.0.14",
+    "expo-dev-client": "~55.0.37",
     "expo-file-system": "~55.0.17",
     "expo-notifications": "^56.0.15",
     "expo-secure-store": "~55.0.13",
@@ -23,14 +31,19 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.6",
+    "react-native-applovin-max": "^9.6.0",
     "react-native-chart-kit": "^6.12.0",
     "react-native-dotenv": "^3.4.11",
+    "react-native-purchases": "^8.12.0",
     "react-native-safe-area-context": "~5.6.2",
     "react-native-svg": "^15.15.3",
     "react-native-web": "^0.21.0"
   },
   "private": true,
   "devDependencies": {
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~55.0.1",
+    "jest-expo": "~55.0.19",
     "sharp": "^0.34.5"
   }
 }

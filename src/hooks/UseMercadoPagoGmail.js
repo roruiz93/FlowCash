@@ -122,7 +122,7 @@ restore();
 useEffect(() => {
 if (response?.type === 'success') {
 const { code } = response.params;
-exchangeCodeForToken(code);
+exchangeCodeForToken(code, request?.codeVerifier);
 } else if (response?.type === 'error') {
 setError('Error al conectar con Google');
 setLoading(false);
@@ -130,7 +130,7 @@ setLoading(false);
 }, [response]);
 
 // Intercambiar código por access token
-const exchangeCodeForToken = async (code) => {
+const exchangeCodeForToken = async (code, codeVerifier) => {
 try {
 const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
 method: 'POST',
@@ -140,6 +140,7 @@ code,
 client_id: GOOGLE_CLIENT_ID,
 redirect_uri: redirectUri,
 grant_type: 'authorization_code',
+...(codeVerifier && { code_verifier: codeVerifier }),
 }).toString(),
 });
 const tokenData = await tokenRes.json();
@@ -297,8 +298,11 @@ const afterUnix = Math.floor(after.getTime() / 1000);
 
   const now = new Date();
   setLastSync(now);
+  const savedRaw = await SecureStore.getItemAsync(STORAGE_KEY);
+  const { refreshToken: savedRefresh } = savedRaw ? JSON.parse(savedRaw) : {};
   await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify({
     accessToken,
+    refreshToken: savedRefresh || null,
     lastSync: now.toISOString(),
   }));
 } catch (e) {

@@ -28,8 +28,9 @@ setCategory('Food');
 const isEditing = !!initialData;
 
 const handleAdd = () => {
-if (!desc.trim() || !amount) return;
-onAdd(desc.trim(), parseFloat(amount), category, type);
+const parsed = parseFloat(amount);
+if (!desc.trim() || isNaN(parsed) || parsed <= 0) return;
+onAdd(desc.trim(), parsed, category, type);
 setDesc(''); setAmount(''); setType('expense'); setCategory('Food');
 onClose();
 };

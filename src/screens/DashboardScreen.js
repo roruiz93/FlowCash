@@ -2,10 +2,11 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { COLORS, CAT_EMOJIS, CAT_COLORS } from '../constants';
 import { useLang } from '../hooks/useLang';
+import AdBanner from '../components/AdBanner';
 
 const fmt = (n) => '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
 
-export default function DashboardScreen({ transactions }) {
+export default function DashboardScreen({ transactions, bottomOffset = 80 }) {
   const { t } = useLang();
   const now = new Date();
 
@@ -40,6 +41,8 @@ export default function DashboardScreen({ transactions }) {
         </View>
       </View>
 
+      <AdBanner />
+
       <Text style={styles.sectionTitle}>{t('recentTx')}</Text>
       {recent.length === 0 ? (
         <View style={styles.empty}>
@@ -68,7 +71,7 @@ export default function DashboardScreen({ transactions }) {
           );
         })
       )}
-      <View style={{ height: 80 }} />
+      <View style={{ height: bottomOffset + 20 }} />
     </ScrollView>
   );
 }

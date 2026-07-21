@@ -1,3 +1,8 @@
+// Polyfill FormData for Firebase + Hermes/New Architecture compatibility
+if (typeof FormData === 'undefined') {
+  global.FormData = require('react-native/Libraries/Network/FormData').default;
+}
+
 import { registerRootComponent } from 'expo';
 
 import App from './App';

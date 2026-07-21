@@ -5,7 +5,7 @@ node_modules/
 
 # Expo
 .expo/
-dist/
+dist*/
 web-build/
 expo-env.d.ts
 
@@ -32,11 +32,17 @@ yarn-error.*
 
 # local env files
 .env*.local
-#env fyles
 .env
+
+# Firebase config files with credentials
+GoogleService-Info.plist
 
 # typescript
 *.tsbuildinfo
+
+# build artifacts
+*.apk
+*.aab
 
 # generated native folders
 /ios

@@ -1,0 +1,65 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Transacciones: cada usuario solo ve las suyas (filtra por campo userId)
+    match /transactions/{txId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Recordatorios: cada usuario solo ve los suyos
+    match /reminders/{remId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Presupuesto: documento por userId
+    match /budgets/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Ahorros: documento por userId
+    match /savings/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Metas de ahorro con fecha objetivo (premium)
+      match /goals/{goalId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Tasas de inversión: solo lectura para usuarios autenticados
+    match /config/{docId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Perfil de usuario: estado premium (RevenueCat) + legacy free access
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Alertas de presupuesto (premium)
+    match /budgetAlerts/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Categorías personalizadas (premium)
+    match /categories/{uid}/items/{itemId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Resúmenes mensuales con IA: solo lectura, se escriben server-side
+    match /aiSummaries/{uid}/{monthKey} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Bloquear todo lo demás por defecto
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

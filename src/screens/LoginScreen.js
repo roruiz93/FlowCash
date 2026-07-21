@@ -7,6 +7,7 @@ import { auth } from '../config/firebase';
 import { COLORS } from '../constants';
 import { useLang } from '../hooks/useLang';
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID } from '@env';
+import PrivacyPolicyModal from '../components/PrivacyPolicyModal';
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen({ onLogin, onRegister }) {
@@ -17,6 +18,9 @@ const [password, setPassword] = useState('');
 const [loading, setLoading] = useState(false);
 const [error, setError] = useState('');
 const [successMsg, setSuccessMsg] = useState('');
+const [acceptedPolicy, setAcceptedPolicy] = useState(false);
+const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+const needsPolicyAccept = mode === 'register' && !acceptedPolicy;
 
 const [request, response, promptAsync] = Google.useAuthRequest({
   webClientId: GOOGLE_WEB_CLIENT_ID,
@@ -33,6 +37,7 @@ signInWithCredential(auth, credential).catch(() => setError(t('authError')));
 
 const handleSubmit = async () => {
 if (!email.trim() || !password.trim()) { setError(t('emailRequired')); return; }
+if (needsPolicyAccept) { setError(t('privacyRequired')); return; }
 setLoading(true); setError(''); setSuccessMsg('');
 try {
 if (mode === 'login') await onLogin(email.trim(), password);
@@ -44,6 +49,11 @@ else if (e.code === 'auth/weak-password') setError(t('weakPassword'));
 else setError(t('authError'));
 }
 setLoading(false);
+};
+
+const handleGooglePress = () => {
+  if (needsPolicyAccept) { setError(t('privacyRequired')); return; }
+  promptAsync();
 };
 
 const handleForgotPassword = async () => {
@@ -67,7 +77,7 @@ return (
 <Text style={styles.logoSub}>{t('logoSub')}</Text>
 </View>
 <View style={styles.card}>
-<TouchableOpacity style={styles.googleBtn} onPress={() => promptAsync()} disabled={!request}>
+<TouchableOpacity style={styles.googleBtn} onPress={handleGooglePress} disabled={!request}>
 <Text style={styles.googleIcon}>G</Text>
 <Text style={styles.googleBtnText}>{t('googleBtn')}</Text>
 </TouchableOpacity>
@@ -103,6 +113,25 @@ return (
         </TouchableOpacity>
       )}
 
+      {mode === 'register' && (
+        <TouchableOpacity
+          style={styles.policyRow}
+          onPress={() => setAcceptedPolicy(v => !v)}
+          activeOpacity={0.7}>
+          <View style={[styles.checkbox, acceptedPolicy && styles.checkboxChecked]}>
+            {acceptedPolicy && <Text style={styles.checkboxMark}>✓</Text>}
+          </View>
+          <Text style={styles.policyText}>
+            {t('privacyPre')}
+            <Text
+              style={styles.policyLink}
+              onPress={() => setShowPrivacyModal(true)}>
+              {t('privacyLink')}
+            </Text>
+          </Text>
+        </TouchableOpacity>
+      )}
+
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {successMsg ? <Text style={styles.success}>{successMsg}</Text> : null}
 
@@ -113,6 +142,7 @@ return (
       </TouchableOpacity>
     </View>
   </ScrollView>
+  <PrivacyPolicyModal visible={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
 </KeyboardAvoidingView>
 );
 }
@@ -139,6 +169,12 @@ label: { fontSize: 11, color: COLORS.muted, letterSpacing: 0.8, marginBottom: 6 
 input: { backgroundColor: COLORS.card2, borderWidth: 1, borderColor: COLORS.border, borderRadius: 12, padding: 12, color: COLORS.text, fontSize: 16, marginBottom: 14 },
 forgotBtn: { alignSelf: 'flex-end', marginBottom: 12, marginTop: -6 },
 forgotText: { fontSize: 13, color: COLORS.accent2 },
+policyRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 14 },
+checkbox: { width: 20, height: 20, borderRadius: 6, borderWidth: 1.5, borderColor: COLORS.border, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+checkboxChecked: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
+checkboxMark: { color: '#000', fontSize: 13, fontWeight: '800' },
+policyText: { flex: 1, fontSize: 13, color: COLORS.muted, lineHeight: 18 },
+policyLink: { color: COLORS.accent2, textDecorationLine: 'underline' },
 error: { color: COLORS.red, fontSize: 13, marginBottom: 12, backgroundColor: 'rgba(255,77,109,0.1)', padding: 10, borderRadius: 8 },
 success: { color: COLORS.accent, fontSize: 13, marginBottom: 12, backgroundColor: 'rgba(0,229,160,0.1)', padding: 10, borderRadius: 8 },
 submitBtn: { backgroundColor: COLORS.accent, borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4 },

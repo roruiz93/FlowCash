@@ -6,8 +6,14 @@ import {
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LangProvider, useLang } from './src/hooks/useLang';
 import { requestNotificationPermissions, scheduleReminderNotification, cancelReminderNotification } from './src/utils/notifications';
+import { deleteAccountAndData } from './src/utils/deleteAccount';
 import { useAuth } from './src/hooks/useAuth';
 import { useTransactions, useReminders } from './src/hooks/useFirestore';
+import { PremiumProvider, usePremiumStatus } from './src/hooks/usePremium';
+import { AdsProvider } from './src/hooks/useAds';
+import { useInterstitialAd } from './src/hooks/useInterstitialAd';
+import PremiumGate, { useFeatureAccess } from './src/components/PremiumGate';
+import PaywallScreen from './src/screens/PaywallScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import MercadoPagoScreen from './src/screens/MercadoPagoScreen';
 import TransactionsScreen from './src/screens/TransactionsScreen';
@@ -17,8 +23,9 @@ import ChartsScreen from './src/screens/ChartsScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import AddTransactionModal from './src/components/AddTransactionModal';
 import AddReminderModal from './src/components/AddReminderModal';
+import PrivacyPolicyModal from './src/components/PrivacyPolicyModal';
 import SavingsScreen from './src/screens/SavingScreen';
-import { COLORS } from './src/constants';
+import { COLORS, FREE_REMINDER_CAP } from './src/constants';
 
 const TABS = ['dashboard', 'transactions', 'charts', 'budget', 'savings', 'mercadopago', 'reminders'];
 const TAB_ICONS = {
@@ -37,9 +44,13 @@ const BOTTOM_NAV_HEIGHT = 60;
 function AppContent() {
   const { t, lang, setLang } = useLang();
   const { user, loading: authLoading, login, register, logout } = useAuth();
+  const { isPremium, paywallVisible, paywallTrigger, closePaywall, openPaywall } = usePremiumStatus();
+  const hasReminderAccess = useFeatureAccess('reminders');
+  const { showAd: showOccasionalInterstitial } = useInterstitialAd({ enabled: !isPremium, mandatory: false });
   const [tab, setTab] = useState('dashboard');
   const [showTxModal, setShowTxModal] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
 
@@ -75,6 +86,31 @@ function AppContent() {
     deleteReminder(id);
   };
 
+  const confirmDeleteAccount = () => {
+    Alert.alert(
+      t('deleteAccountConfirmTitle'),
+      t('deleteAccountConfirmMsg'),
+      [
+        { text: t('cancel'), style: 'cancel' },
+        {
+          text: t('deleteAccount'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAccountAndData(user.uid);
+            } catch (e) {
+              if (e.code === 'auth/requires-recent-login') {
+                Alert.alert(t('deleteAccount'), t('deleteAccountRecentLogin'));
+              } else {
+                Alert.alert(t('error'), t('deleteAccountError'));
+              }
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const addTransactions = async (txArray) => {
     await Promise.all(txArray.map(tx => addTransaction(
       tx.description || tx.desc,
@@ -86,7 +122,13 @@ function AppContent() {
   };
 
   const handleFab = () => {
-    if (tab === 'reminders') setShowReminderModal(true);
+    if (tab === 'reminders') {
+      if (!hasReminderAccess && reminders.length >= FREE_REMINDER_CAP) {
+        openPaywall('reminders');
+        return;
+      }
+      setShowReminderModal(true);
+    }
     else if (tab === 'mercadopago' || tab === 'savings' || tab === 'charts') return;
     else setShowTxModal(true);
   };
@@ -142,15 +184,33 @@ function AppContent() {
         </View>
       </View>
 
-      <Text style={[styles.userEmail, { fontSize: 10 * scale }]}>{user.email}</Text>
+      <View style={styles.userEmailRow}>
+        <Text style={[styles.userEmail, { fontSize: 10 * scale }]}>{user.email}</Text>
+        <View style={styles.userEmailActions}>
+          <TouchableOpacity onPress={() => setShowPrivacyModal(true)}>
+            <Text style={styles.privacyLink}>{t('privacyLink')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={confirmDeleteAccount}>
+            <Text style={styles.deleteAccountLink}>{t('deleteAccount')}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {/* Contenido principal */}
       <View style={styles.content}>
         {tab === 'dashboard'    && <DashboardScreen transactions={transactions} bottomOffset={bottomNavTotal} />}
         {tab === 'transactions' && <TransactionsScreen transactions={transactions} onDelete={deleteTransaction} onEdit={editTransaction} hasMore={hasMore} onLoadMore={loadMore} bottomOffset={bottomNavTotal} />}
         {tab === 'charts'       && <ChartsScreen transactions={transactions} bottomOffset={bottomNavTotal} />}
-        {tab === 'budget'       && <BudgetScreen transactions={transactions} userId={user.uid} bottomOffset={bottomNavTotal} />}
-        {tab === 'savings'      && <SavingsScreen transactions={transactions} userId={user?.uid} bottomOffset={bottomNavTotal} />}
+        {tab === 'budget'       && (
+          <PremiumGate feature="budget">
+            <BudgetScreen transactions={transactions} userId={user.uid} bottomOffset={bottomNavTotal} />
+          </PremiumGate>
+        )}
+        {tab === 'savings'      && (
+          <PremiumGate feature="savings">
+            <SavingsScreen transactions={transactions} userId={user?.uid} bottomOffset={bottomNavTotal} />
+          </PremiumGate>
+        )}
         {tab === 'mercadopago'  && <MercadoPagoScreen onImport={addTransactions} bottomOffset={bottomNavTotal} />}
         {tab === 'reminders'    && <RemindersScreen reminders={reminders} onDelete={handleDeleteReminder} bottomOffset={bottomNavTotal} />}
       </View>
@@ -174,7 +234,7 @@ function AppContent() {
             <TouchableOpacity
               key={tabName}
               style={[styles.navItem, { minWidth: width / 5 }]}
-              onPress={() => setTab(tabName)}>
+              onPress={() => { setTab(tabName); showOccasionalInterstitial(); }}>
               <Text style={[styles.navIcon, { opacity: tab === tabName ? 1 : 0.4 }]}>
                 {TAB_ICONS[tabName]}
               </Text>
@@ -196,6 +256,15 @@ function AppContent() {
         onClose={() => setShowReminderModal(false)}
         onAdd={handleAddReminder}
       />
+      <PaywallScreen
+        visible={paywallVisible}
+        onClose={closePaywall}
+        trigger={paywallTrigger}
+      />
+      <PrivacyPolicyModal
+        visible={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+      />
     </View>
   );
 }
@@ -204,7 +273,11 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <LangProvider>
-        <AppContent />
+        <PremiumProvider>
+          <AdsProvider>
+            <AppContent />
+          </AdsProvider>
+        </PremiumProvider>
       </LangProvider>
     </SafeAreaProvider>
   );
@@ -230,11 +303,15 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: COLORS.border,
   },
   logoutText: { fontSize: 13, fontWeight: '600', color: COLORS.red },
-  userEmail: {
-    color: COLORS.muted,
+  userEmailRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 6,
     borderBottomWidth: 1, borderColor: COLORS.border,
   },
+  userEmail: { color: COLORS.muted },
+  userEmailActions: { flexDirection: 'row', gap: 14 },
+  privacyLink: { fontSize: 10, color: COLORS.accent2, textDecorationLine: 'underline' },
+  deleteAccountLink: { fontSize: 10, color: COLORS.red, textDecorationLine: 'underline' },
   content: { flex: 1 },
   fab: {
     position: 'absolute', right: 20,

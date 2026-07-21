@@ -1,0 +1,51 @@
+{
+  "cli": {
+    "version": ">= 12.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "GOOGLE_WEB_CLIENT_ID": "648340942405-pihe13s160sa5mr8qeiuchamosfp04jr.apps.googleusercontent.com",
+        "GOOGLE_ANDROID_CLIENT_ID": "648340942405-c85oarss30jqa27gbinblo5ft064q9dq.apps.googleusercontent.com",
+        "REVENUECAT_IOS_API_KEY": "PENDING_SETUP",
+        "REVENUECAT_ANDROID_API_KEY": "PENDING_SETUP",
+        "APPLOVIN_SDK_KEY": "PENDING_SETUP",
+        "APPLOVIN_BANNER_AD_UNIT_ID": "PENDING_SETUP",
+        "APPLOVIN_INTERSTITIAL_AD_UNIT_ID": "PENDING_SETUP"
+      }
+    },
+    "preview": {
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "GOOGLE_WEB_CLIENT_ID": "648340942405-pihe13s160sa5mr8qeiuchamosfp04jr.apps.googleusercontent.com",
+        "GOOGLE_ANDROID_CLIENT_ID": "648340942405-c85oarss30jqa27gbinblo5ft064q9dq.apps.googleusercontent.com",
+        "REVENUECAT_IOS_API_KEY": "PENDING_SETUP",
+        "REVENUECAT_ANDROID_API_KEY": "PENDING_SETUP",
+        "APPLOVIN_SDK_KEY": "PENDING_SETUP",
+        "APPLOVIN_BANNER_AD_UNIT_ID": "PENDING_SETUP",
+        "APPLOVIN_INTERSTITIAL_AD_UNIT_ID": "PENDING_SETUP"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "GOOGLE_WEB_CLIENT_ID": "648340942405-pihe13s160sa5mr8qeiuchamosfp04jr.apps.googleusercontent.com",
+        "GOOGLE_ANDROID_CLIENT_ID": "648340942405-c85oarss30jqa27gbinblo5ft064q9dq.apps.googleusercontent.com",
+        "REVENUECAT_IOS_API_KEY": "PENDING_SETUP",
+        "REVENUECAT_ANDROID_API_KEY": "PENDING_SETUP",
+        "APPLOVIN_SDK_KEY": "PENDING_SETUP",
+        "APPLOVIN_BANNER_AD_UNIT_ID": "PENDING_SETUP",
+        "APPLOVIN_INTERSTITIAL_AD_UNIT_ID": "PENDING_SETUP"
+      }
+    }
+  }
+}
