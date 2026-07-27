@@ -18,7 +18,7 @@ export default function AddReminderModal({ visible, onClose, onAdd }) {
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'position'}>
         <TouchableOpacity style={styles.backdrop} onPress={onClose} />
         <View style={styles.modal}>
           <Text style={styles.title}>{t('addReminder')}</Text>

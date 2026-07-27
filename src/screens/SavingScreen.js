@@ -449,7 +449,7 @@ return (
   </ScrollView>
 
   <Modal visible={showGoalModal} transparent animationType="slide" onRequestClose={() => setShowGoalModal(false)}>
-    <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'position'}>
       <TouchableOpacity style={{ flex: 1 }} onPress={() => setShowGoalModal(false)} />
       <View style={styles.modalBox}>
         <Text style={styles.modalTitle}>{t('goalModalTitle')}</Text>

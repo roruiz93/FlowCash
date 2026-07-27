@@ -38,6 +38,7 @@ export const PremiumProvider = ({ children }) => {
 
   const legacyComputing = useRef(false);
   const configuredUid = useRef(null);
+  const rcConfigured = useRef(false);
 
   const syncFromCustomerInfo = useCallback(async (customerInfo) => {
     const entitlement = customerInfo?.entitlements?.active?.[ENTITLEMENT_ID];
@@ -64,18 +65,32 @@ export const PremiumProvider = ({ children }) => {
   // Configura RevenueCat con el uid actual (appUserID) y engancha el listener de entitlements.
   useEffect(() => {
     if (!uid) {
-      if (configuredUid.current) {
+      if (configuredUid.current && rcConfigured.current) {
         Purchases.logOut().catch(() => {});
-        configuredUid.current = null;
       }
+      configuredUid.current = null;
       setRcReady(true);
       return;
     }
     if (configuredUid.current === uid) return;
+    configuredUid.current = uid;
 
     const apiKey = Platform.OS === 'ios' ? REVENUECAT_IOS_API_KEY : REVENUECAT_ANDROID_API_KEY;
-    Purchases.configure({ apiKey, appUserID: uid });
-    configuredUid.current = uid;
+    if (!apiKey) {
+      // RevenueCat sin API key configurada (ej. desarrollo/testing sin cuenta armada
+      // todavia): el usuario queda como no-premium en vez de crashear la app entera,
+      // ya que Purchases.configure() tira una excepcion nativa sincronica con key vacia.
+      setRcReady(true);
+      return;
+    }
+
+    try {
+      Purchases.configure({ apiKey, appUserID: uid });
+      rcConfigured.current = true;
+    } catch (e) {
+      setRcReady(true);
+      return;
+    }
 
     const listener = (customerInfo) => { syncFromCustomerInfo(customerInfo); };
     Purchases.addCustomerInfoUpdateListener(listener);
